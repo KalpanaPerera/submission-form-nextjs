@@ -11,7 +11,19 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
+import { CalendarIcon } from "lucide-react"
+import { cn } from "@/lib/utils"
+import { Checkbox } from "@/components/ui/checkbox"
+
+const FormField = ({ label, htmlFor, children, error }: { label: string, htmlFor: string, children: React.ReactNode, error?: string }) => (
+  <div className="w-full space-y-2">
+    <Label htmlFor={htmlFor} className="text-base">{label}</Label>
+    {children}
+    {error && <p className="text-sm text-red-500 mt-1">{error}</p>}
+  </div>
+)
 
 type FormData = z.infer<typeof submissionFormSchema>
 
@@ -32,74 +44,104 @@ export default function SubmissionForm() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto p-6">
-      <h2 className="text-2xl font-bold mb-4">Submission Form</h2>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <div className="max-w-full mx-auto px-4 py-8 sm:px-6 lg:px-8">
+      <div className="bg-white rounded-xl shadow-md p-8">
+        <h2 className="text-3xl font-bold mb-6 text-center">Submission Form</h2>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
 
-        <div>
-          <Label htmlFor="name">Full Name</Label>
-          <Input id="name" {...register("name")} />
-          <p className="text-red-500 text-sm">{errors.name?.message}</p>
-        </div>
+          <FormField label="First Name *" htmlFor="name" error={errors.name?.message}>
+            <Input id="fname" placeholder="Enter your first name" {...register("name")} />
+          </FormField>
 
-        <div>
-          <Label htmlFor="email">Email</Label>
-          <Input id="email" type="email" {...register("email")} />
-          <p className="text-red-500 text-sm">{errors.email?.message}</p>
-        </div>
+          <FormField label="Last Name *" htmlFor="name" error={errors.name?.message}>
+            <Input id="lname" placeholder="Enter your last name" {...register("name")} />
+          </FormField>
 
-        <div>
-          <Label htmlFor="age">Age</Label>
-          <Input id="age" type="number" {...register("age")} />
-          <p className="text-red-500 text-sm">{errors.age?.message}</p>
-        </div>
+          <FormField label="Email *" htmlFor="email" error={errors.email?.message}>
+            <Input id="email" type="email" placeholder="you@example.com" {...register("email")} />
+          </FormField>
 
-        <div>
-          <Label>Date of Submission</Label>
-          <div className="border rounded-md p-2">
-            <Calendar
-              mode="single"
-              selected={date}
-              onSelect={(d) => {
-                setDate(d)
-                setValue("date", d!)
-              }}
-              className="rounded-md border"
-            />
-            <p className="text-sm mt-1 text-muted-foreground">
-              Selected: {date ? format(date, "PPP") : "No date selected"}
-            </p>
-            <p className="text-red-500 text-sm">{errors.date?.message}</p>
-          </div>
-        </div>
+          <FormField label="Phone Number (WhatsApp) *" htmlFor="phone" error={errors.phone?.message}>
+            <Input id="phone" type="tel" placeholder="e.g. +94771234567" {...register("phone")} />
+          </FormField>
 
-        <div>
-          <Label>Gender</Label>
-          <RadioGroup
-            onValueChange={(value) => setValue("gender", value as "male" | "female")}
-            defaultValue="female"
-            className="flex gap-4 mt-2"
-          >
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="female" id="female" />
-              <Label htmlFor="female">Female</Label>
+          <FormField label="Age *" htmlFor="age" error={errors.age?.message}>
+            <Input id="age" type="number" placeholder="Enter your age" {...register("age")} />
+          </FormField>
+
+          <FormField label="Date of Birth *" htmlFor="date" error={errors.date?.message}>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !date && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {date ? format(date, "PPP") : <span>Pick a date</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0">
+                <Calendar
+                  mode="single"
+                  selected={date}
+                  onSelect={(d) => {
+                    setDate(d)
+                    setValue("date", d!)
+                  }}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+          </FormField>
+
+          <FormField label="Gender *" htmlFor="gender" error={errors.gender?.message}>
+            <RadioGroup
+              onValueChange={(value) => setValue("gender", value as "male" | "female" | "other")}
+              defaultValue="female"
+              className="flex flex-wrap gap-4 mt-2"
+            >
+              <div className="flex items-center space-x-2 font-normal">
+                <RadioGroupItem value="female" id="female" />
+                <span>Female</span>
+              </div>
+              <div className="flex items-center space-x-2 font-normal">
+                <RadioGroupItem value="male" id="male" />
+                <span>Male</span>
+              </div>
+              <div className="flex items-center space-x-2 font-normal">
+                <RadioGroupItem value="other" id="other" />
+                <span>Other</span>
+              </div>
+            </RadioGroup>
+          </FormField>
+
+          <FormField label="Upload Resume / File *" htmlFor="file" error={errors.file?.message}>
+            <Input id="file" type="file" {...register("file")} />
+          </FormField>
+
+          <FormField label="Preferred Mode (Optional)" htmlFor="mode">
+            <div className="flex flex-wrap gap-4">
+              <div className="flex items-center space-x-2 font-normal">
+                <Checkbox id="onsite" {...register("preferredMode.onsite")} />
+                <span>Onsite</span>
+              </div>
+              <div className="flex items-center space-x-2 font-normal">
+                <Checkbox id="remote" {...register("preferredMode.remote")} />
+                <span>Remote</span>
+              </div>
+              <div className="flex items-center space-x-2 font-normal">
+                <Checkbox id="hybrid" {...register("preferredMode.hybrid")} />
+                <span>Hybrid</span>
+              </div>
             </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="male" id="male" />
-              <Label htmlFor="male">Male</Label>
-            </div>
-          </RadioGroup>
-          <p className="text-red-500 text-sm">{errors.gender?.message}</p>
-        </div>
+          </FormField>
 
-        <div>
-          <Label htmlFor="phone">Phone Number</Label>
-          <Input id="phone" type="tel" {...register("phone")} />
-          <p className="text-red-500 text-sm">{errors.phone?.message}</p>
-        </div>
-
-        <Button type="submit" className="w-full">Submit</Button>
-      </form>
+          <Button type="submit" className="w-full">Submit</Button>
+        </form>
+      </div>
     </div>
   )
-} 
+}
